@@ -51,33 +51,54 @@ async function main() {
     }
   });
 
-  await prisma.profileBadge.createMany({
-    data: [
-      { profileId: profile.id, badgeId: founder.id },
-      { profileId: profile.id, badgeId: verified.id }
-    ],
-    skipDuplicates: true
-  });
-
-  await prisma.link.createMany({
-    data: [
-      {
-        profileId: profile.id,
-        title: "Discord",
-        url: "https://discord.com",
-        type: LinkType.DISCORD,
-        position: 0
+  for (const badge of [founder, verified]) {
+    await prisma.profileBadge.upsert({
+      where: {
+        profileId_badgeId: {
+          profileId: profile.id,
+          badgeId: badge.id
+        }
       },
-      {
+      update: {},
+      create: {
         profileId: profile.id,
-        title: "GitHub",
-        url: "https://github.com",
-        type: LinkType.GITHUB,
-        position: 1
+        badgeId: badge.id
       }
-    ],
-    skipDuplicates: true
-  });
+    });
+  }
+
+  const links = [
+    {
+      title: "Discord",
+      url: "https://discord.com",
+      type: LinkType.DISCORD,
+      position: 0
+    },
+    {
+      title: "GitHub",
+      url: "https://github.com",
+      type: LinkType.GITHUB,
+      position: 1
+    }
+  ];
+
+  for (const link of links) {
+    const existing = await prisma.link.findFirst({
+      where: {
+        profileId: profile.id,
+        title: link.title
+      }
+    });
+
+    if (!existing) {
+      await prisma.link.create({
+        data: {
+          ...link,
+          profileId: profile.id
+        }
+      });
+    }
+  }
 }
 
 main()

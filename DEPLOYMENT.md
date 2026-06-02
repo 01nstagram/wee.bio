@@ -19,12 +19,12 @@ Set these variables in Vercel before deploying:
 - `DISCORD_CLIENT_ID`
 - `DISCORD_CLIENT_SECRET`
 
-## Database migrations
+## Database setup
 
-Run Prisma migrations against the production database after `DATABASE_URL` is configured:
+This project uses MongoDB through Prisma. After `DATABASE_URL` is configured, sync Prisma indexes with:
 
 ```sh
-npx prisma migrate deploy
+npx prisma db push
 ```
 
-Do not run database migrations inside the Vercel build command. The build only generates Prisma Client and compiles Next.js.
+Do not run database setup inside the Vercel build command. The build only generates Prisma Client and compiles Next.js.
