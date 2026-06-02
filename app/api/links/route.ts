@@ -5,6 +5,8 @@ import { getApiKeyUser } from "@/lib/api-auth";
 import { jsonError, parseJson } from "@/lib/api-response";
 import { linkCreateSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 async function resolveUser(request: Request, scope: string) {
   const apiUser = await getApiKeyUser(request, scope);
 

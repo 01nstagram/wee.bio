@@ -2,7 +2,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import type { DefaultSession, NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
-import { prisma } from "@/lib/db";
+import { isDatabaseConfigured, prisma } from "@/lib/db";
 import { toUsernameSlug } from "@/lib/slug";
 
 declare module "next-auth" {
@@ -66,7 +66,20 @@ export const authOptions: NextAuthOptions = {
   }
 };
 
-export function auth() {
+export function isAuthRuntimeConfigured() {
+  const hasDiscordProvider = Boolean(
+    process.env.DISCORD_CLIENT_ID?.trim() && process.env.DISCORD_CLIENT_SECRET?.trim()
+  );
+  const hasRequiredSecret = process.env.NODE_ENV !== "production" || Boolean(process.env.NEXTAUTH_SECRET?.trim());
+
+  return isDatabaseConfigured() && hasDiscordProvider && hasRequiredSecret;
+}
+
+export async function auth() {
+  if (!isAuthRuntimeConfigured()) {
+    return null;
+  }
+
   return getServerSession(authOptions);
 }
 

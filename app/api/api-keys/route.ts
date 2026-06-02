@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { apiKeyCreateSchema } from "@/lib/validators";
 import { createApiKeySecret } from "@/lib/api-auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const user = await requireUser();
   const apiKeys = await prisma.apiKey.findMany({

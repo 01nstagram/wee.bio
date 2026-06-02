@@ -5,6 +5,8 @@ import { jsonError, parseJson, truncateHeader } from "@/lib/api-response";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { viewCreateSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   const rate = checkRateLimit(`view:${ip}`, 30, 60_000);

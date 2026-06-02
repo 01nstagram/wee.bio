@@ -5,6 +5,8 @@ import { getApiKeyUser } from "@/lib/api-auth";
 import { jsonError, parseJson } from "@/lib/api-response";
 import { profileUpdateSchema } from "@/lib/validators";
 
+export const dynamic = "force-dynamic";
+
 function cleanOptional(value?: string) {
   return value === "" ? null : value;
 }

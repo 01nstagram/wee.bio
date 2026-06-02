@@ -2,9 +2,13 @@ import { notFound } from "next/navigation";
 import { ProfileCard } from "@/components/profile-card";
 import { Shell } from "@/components/ui";
 import { prisma } from "@/lib/db";
-import { toUsernameSlug } from "@/lib/slug";
+import { isProfileUsernameCandidate, toUsernameSlug } from "@/lib/slug";
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
+  if (!isProfileUsernameCandidate(params.username)) {
+    return { title: "Profile not found — wee.bio" };
+  }
+
   const username = toUsernameSlug(params.username);
   const profile = await prisma.profile.findUnique({ where: { username } });
 
@@ -24,6 +28,10 @@ export async function generateMetadata({ params }: { params: { username: string 
 }
 
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
+  if (!isProfileUsernameCandidate(params.username)) {
+    notFound();
+  }
+
   const username = toUsernameSlug(params.username);
   const profile = await prisma.profile.findUnique({
     where: { username },
