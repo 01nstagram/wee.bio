@@ -3,9 +3,9 @@
   "env": {
     "OPENAI_BASE_URL": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     "OPENAI_MODEL": "qwen3.7-plus",
-    "OPENAI_AUTH_HEADER": "sk-ws-H.HEYEIY.GtIr.MEUCIDyssTQTBfTQHc-T67yPFrxiISgmoku0tt_kmRfwCrlEAiEAkgZMt_QssY3Qvutb49emfNXYxOatYxLa_DCxc-4ZGbI",
-    "OPENAI_AUTH_SCHEME": "raw",
+    "OPENAI_AUTH_HEADER": "Authorization",
+    "OPENAI_AUTH_SCHEME": "bearer",
     "OPENAI_AUTH_HEADER_VALUE": "sk-ws-H.HEYEIY.GtIr.MEUCIDyssTQTBfTQHc-T67yPFrxiISgmoku0tt_kmRfwCrlEAiEAkgZMt_QssY3Qvutb49emfNXYxOatYxLa_DCxc-4ZGbI"
   },
-  "createdAt": "2026-06-02T19:23:50.082Z"
+  "createdAt": "2026-06-02T21:59:12.745Z"
 }
