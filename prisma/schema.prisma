@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum LinkType {
+  WEBSITE
+  DISCORD
+  GITHUB
+  INSTAGRAM
+  TWITTER
+  YOUTUBE
+  TWITCH
+  TIKTOK
+  SPOTIFY
+  EMAIL
+  CUSTOM
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?   @db.VarChar(1024)
+  role          Role      @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  apiKeys       ApiKey[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Profile {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  username        String         @unique
+  displayName     String
+  bio             String?        @db.VarChar(600)
+  avatarUrl       String?        @db.VarChar(1024)
+  bannerUrl       String?        @db.VarChar(1024)
+  backgroundUrl   String?        @db.VarChar(1024)
+  primaryColor    String         @default("#8b5cf6")
+  secondaryColor  String         @default("#22d3ee")
+  textColor       String         @default("#ffffff")
+  accentStyle     String         @default("glass")
+  musicUrl        String?        @db.VarChar(1024)
+  embedTitle      String?        @db.VarChar(120)
+  embedDescription String?       @db.VarChar(240)
+  isPublic        Boolean        @default(true)
+  showDiscord     Boolean        @default(true)
+  links           Link[]
+  views           ProfileView[]
+  badges          ProfileBadge[]
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([username])
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  profileId String
+  title     String
+  url       String   @db.VarChar(1024)
+  type      LinkType @default(CUSTOM)
+  icon      String?  @db.VarChar(80)
+  position  Int      @default(0)
+  enabled   Boolean  @default(true)
+  clicks    Int      @default(0)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId, position])
+}
+
+model Badge {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  label       String
+  color       String         @default("#8b5cf6")
+  description String?        @db.VarChar(240)
+  profiles    ProfileBadge[]
+  createdAt   DateTime       @default(now())
+}
+
+model ProfileBadge {
+  profileId String
+  badgeId   String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  badge     Badge   @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, badgeId])
+}
+
+model ProfileView {
+  id        String   @id @default(cuid())
+  profileId String
+  ipHash    String?  @db.VarChar(128)
+  referrer  String?  @db.VarChar(512)
+  userAgent String?  @db.VarChar(512)
+  country   String?  @db.VarChar(80)
+  device    String?  @db.VarChar(80)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([profileId, createdAt])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  label      String
+  prefix     String    @unique
+  keyHash    String    @unique
+  scopes     String    @default("profile:read")
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
