@@ -1,23 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { getApiKeyUser } from "@/lib/api-auth";
+import { jsonError, parseJson } from "@/lib/api-response";
 import { linkCreateSchema } from "@/lib/validators";
 
 async function resolveUser(request: Request, scope: string) {
   const apiUser = await getApiKeyUser(request, scope);
 
   if (apiUser) {
-    return apiUser.id;
+    return { userId: apiUser.id } as const;
   }
 
-  const sessionUser = await requireUser();
-  return sessionUser.id;
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { error: jsonError("Unauthorized", 401) } as const;
+  }
+
+  return { userId: session.user.id } as const;
 }
 
-export async function GET(request: Request) {
-  const userId = await resolveUser(request, "links:read");
-  const profile = await prisma.profile.findUnique({ where: { userId } });
+export async function GET(request: NextRequest) {
+  const resolved = await resolveUser(request, "links:read");
+
+  if ("error" in resolved) {
+    return resolved.error;
+  }
+
+  const profile = await prisma.profile.findUnique({ where: { userId: resolved.userId } });
 
   if (!profile) {
     return NextResponse.json({ links: [] });
@@ -31,10 +42,20 @@ export async function GET(request: Request) {
   return NextResponse.json({ links });
 }
 
-export async function POST(request: Request) {
-  const userId = await resolveUser(request, "links:write");
-  const data = linkCreateSchema.parse(await request.json());
-  const profile = await prisma.profile.findUnique({ where: { userId } });
+export async function POST(request: NextRequest) {
+  const resolved = await resolveUser(request, "links:write");
+
+  if ("error" in resolved) {
+    return resolved.error;
+  }
+
+  const parsed = await parseJson(request, linkCreateSchema);
+
+  if ("error" in parsed) {
+    return parsed.error;
+  }
+
+  const profile = await prisma.profile.findUnique({ where: { userId: resolved.userId } });
 
   if (!profile) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -42,8 +63,8 @@ export async function POST(request: Request) {
 
   const link = await prisma.link.create({
     data: {
-      ...data,
-      icon: data.icon || null,
+      ...parsed.data,
+      icon: parsed.data.icon || null,
       profileId: profile.id
     }
   });
